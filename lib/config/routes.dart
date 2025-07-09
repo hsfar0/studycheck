@@ -6,6 +6,8 @@ import '../features/attendance/screens/attendance_screen.dart';
 import '../features/ranking/screens/ranking_screen.dart';
 
 class Routes {
+  // 라우트 이름 상수
+  static const String home = '/home';
   static const String login = '/login';
   static const String register = '/register';
   static const String profile = '/profile';
@@ -14,6 +16,7 @@ class Routes {
 
   static Map<String, WidgetBuilder> getRoutes() {
     return {
+      home: (context) => const AttendanceScreen(), // 홈 화면은 출석체크 화면으로 설정
       login: (context) => const LoginScreen(),
       register: (context) => const RegisterScreen(),
       profile: (context) => const ProfileScreen(),

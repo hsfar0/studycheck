@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "677182841847",
+    "project_id": "studycheck-4ce36",
+    "storage_bucket": "studycheck-4ce36.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:677182841847:android:9a670d979e2dd0566b44f2",
+        "android_client_info": {
+          "package_name": "com.example.studycheck"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA4vTRL9xUpcZKz-vwA1qsGtu0f56XgXeI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:677182841847:android:c6d4ffb4df474fe16b44f2",
+        "android_client_info": {
+          "package_name": "com.hsfar.studycheck"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA4vTRL9xUpcZKz-vwA1qsGtu0f56XgXeI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

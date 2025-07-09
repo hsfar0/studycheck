@@ -1,9 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   static const Color customBlue = Color(0xFF2196F3);
+
+  Future<void> _handleLogout(BuildContext context) async {
+    try {
+      await FirebaseAuth.instance.signOut();
+      if (context.mounted) {
+        // 로그아웃 후 로그인 화면으로 이동
+        Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('로그아웃 중 오류가 발생했습니다: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -77,7 +97,7 @@ class ProfileScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(size.width * 0.02), // 2% of screen width
                     ),
                   ),
-                  onPressed: () {},
+                  onPressed: () => _handleLogout(context),
                   child: Text(
                     '로그아웃',
                     style: TextStyle(

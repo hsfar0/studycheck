@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -8,30 +9,69 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _usernameController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-
-  void _handleLogin() {
-    final username = _usernameController.text;
-    final password = _passwordController.text;
-
-    if (username.isNotEmpty && password.isNotEmpty) {
-      Navigator.pushReplacementNamed(context, '/attendance');
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('아이디와 비밀번호를 모두 입력해주세요.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
+  final _authService = AuthService();
+  bool _isLoading = false;
+  bool _isSignUp = false;
 
   @override
   void dispose() {
-    _usernameController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _submitForm() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      setState(() => _isLoading = true);
+      
+      try {
+        if (_isSignUp) {
+          await _authService.signUpWithEmailAndPassword(
+            _emailController.text,
+            _passwordController.text,
+          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('회원가입이 완료되었습니다.'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        } else {
+          await _authService.signInWithEmailAndPassword(
+            _emailController.text,
+            _passwordController.text,
+          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('로그인이 완료되었습니다.'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(e.toString()),
+              backgroundColor: Colors.red,
+            ),
+          );
+          // 에러 발생 시에도 현재 유저 상태 확인
+          _authService.debugCurrentUser();
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
+      }
+    }
   }
 
   @override
@@ -49,62 +89,92 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  '자습실 출석체크',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).primaryColor,
-                  ),
-                ),
-                const SizedBox(height: 40),
-                TextField(
-                  controller: _usernameController,
-                  decoration: const InputDecoration(
-                    labelText: '아이디',
-                    prefixIcon: Icon(Icons.person),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: '비밀번호',
-                    prefixIcon: Icon(Icons.lock),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  onPressed: _handleLogin,
-                  child: const Text(
-                    '로그인',
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '자습실 출석체크',
                     style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
+                      fontSize: 28,
                       fontWeight: FontWeight.bold,
+                      color: Theme.of(context).primaryColor,
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/register');
-                  },
-                  child: const Text('회원가입'),
-                ),
-              ],
+                  const SizedBox(height: 48),
+                  TextFormField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                      labelText: '이메일',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.email),
+                    ),
+                    validator: (value) {
+                      if (value?.isEmpty ?? true) {
+                        return '이메일을 입력해주세요';
+                      }
+                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                          .hasMatch(value!)) {
+                        return '유효한 이메일 주소를 입력해주세요';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _passwordController,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      labelText: '비밀번호',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.lock),
+                    ),
+                    validator: (value) {
+                      if (value?.isEmpty ?? true) {
+                        return '비밀번호를 입력해주세요';
+                      }
+                      if ((value?.length ?? 0) < 6) {
+                        return '비밀번호는 6자 이상이어야 합니다';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    onPressed: _isLoading ? null : _submitForm,
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(
+                            _isSignUp ? '회원가입' : '로그인',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: _isLoading
+                        ? null
+                        : () => setState(() => _isSignUp = !_isSignUp),
+                    child: Text(_isSignUp ? '이미 계정이 있나요? 로그인' : '계정이 없나요? 회원가입'),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
