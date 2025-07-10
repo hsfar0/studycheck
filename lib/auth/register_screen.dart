@@ -287,6 +287,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
           password: _passwordController.text,
         );
 
+        // 이메일 인증 메일 보내기
+        await userCredential.user!.sendEmailVerification();
+
+// 안내 메시지
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('이메일로 인증 메일을 전송하였습니다. 인증을 완료해주세요.'),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          // 로그인 화면으로 이동 또는 인증 안내 화면으로 이동
+          Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+        }
+
 
         // Firestore에 저장할 사용자 데이터
         final userData = {
@@ -313,13 +329,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
           // 회원가입 성공 메시지 표시
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('회원가입이 완료되었습니다.'),
+              content: Text('인증 메일이 안 왔다면 스팸함을 열어보세요.'),
               backgroundColor: Colors.green,
             ),
           );
 
-          // 홈 화면으로 이동
-          Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+          // 로그인 화면으로 이동
+          Navigator.pop;
         }
       } on FirebaseAuthException catch (e) {
         String message = '회원가입 중 오류가 발생했습니다.';

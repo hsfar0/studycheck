@@ -18,6 +18,14 @@ class AuthService {
         email: email,
         password: password,
       );
+
+      final user = credential.user;
+
+      if (user != null && !user.emailVerified) {
+        await _auth.signOut(); // 로그인한 상태지만 인증 안 됐으면 바로 로그아웃
+        throw Exception('이메일 인증 후 로그인할 수 있습니다.');
+      }
+
       return credential;
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);

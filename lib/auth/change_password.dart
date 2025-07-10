@@ -27,6 +27,13 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       return;
     }
 
+    if (newPassword == currentPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('새 비밀번호는 현재 비밀번호와 달라야 합니다.')),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {

@@ -34,7 +34,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
       if (!mounted) return;
       
-      if (user != null) {
+      if (user != null && user.emailVerified) {
         // 로그인된 상태면 출석체크 화면으로
         Navigator.of(context).pushReplacementNamed('/home');
       } else {
