@@ -1,17 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class RankingScreen extends StatelessWidget {
   const RankingScreen({super.key});
 
   static const Color customBlue = Color(0xFF2196F3);
 
-  // 분 단위 시간을 "00시간 00분" 형식의 문자열로 변환
   String _formatDuration(int totalMinutes) {
-    // TODO: 실제 데이터베이스에서 총 공부 시간(분)을 가져와서 계산
     final hours = totalMinutes ~/ 60;
     final minutes = totalMinutes % 60;
-    return '${hours.toString().padLeft(2, '0')}시간 ${minutes.toString().padLeft(2, '0')}분';
+
+    if (hours == 0 && minutes == 0) {
+      return '0시간';
+    } else if (hours == 0) {
+      return '${minutes}분';
+    } else if (minutes == 0) {
+      return '${hours}시간';
+    } else {
+      return '${hours}시간 ${minutes}분';
+    }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -47,83 +56,100 @@ class RankingScreen extends StatelessWidget {
           ),
         ),
         child: SafeArea(
-            child: ListView.builder(
-              physics: const BouncingScrollPhysics(),
-              padding: EdgeInsets.symmetric(
-                horizontal: size.width * 0.04,
-                vertical: size.width * 0.02,
-              ),
-              itemCount: 10,
-              itemBuilder: (context, index) {
-                // TODO: 실제 데이터베이스에서 사용자별 총 공부 시간을 가져와서 계산
-                // 예시: totalMinutes = await StudyTimeRepository.getUserTotalMinutes(userId);
-                final mockTotalMinutes = (10 - index) * 120; // 임시 데이터: 상위권일수록 더 많은 시간
+          child: FutureBuilder<QuerySnapshot>(
+            future: FirebaseFirestore.instance
+                .collection('users')
+                .orderBy('studyTime', descending: true)
+                .limit(10)
+                .get(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-                return SizedBox(
-                  height: itemHeight,
-                  child: Card(
-                    elevation: 1,
-                    margin: EdgeInsets.only(
-                      bottom: size.width * 0.015,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(size.width * 0.02),
-                    ),
-                    child: ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: size.width * 0.03,
+              final users = snapshot.data!.docs;
+
+              return ListView.builder(
+                physics: const BouncingScrollPhysics(),
+                padding: EdgeInsets.symmetric(
+                  horizontal: size.width * 0.04,
+                  vertical: size.width * 0.02,
+                ),
+                itemCount: users.length,
+                itemBuilder: (context, index) {
+                  final user = users[index].data() as Map<String, dynamic>;
+                  final name = user['name'] ?? '이름 없음';
+                  final userClass = user['class'] ?? '';
+                  final number = user['number'] ?? '';
+                  final studyTime = user['studyTime'] ?? 0;
+
+                  return SizedBox(
+                    height: itemHeight,
+                    child: Card(
+                      elevation: 1,
+                      margin: EdgeInsets.only(
+                        bottom: size.width * 0.015,
                       ),
-                      leading: Container(
-                        width: itemHeight * 0.5,
-                        height: itemHeight * 0.5,
-                        decoration: BoxDecoration(
-                          color: () {
-                            if (index == 0) return const Color(0xFFFFD700); // 금색
-                            if (index == 1) return const Color(0xFFC0C0C0); // 은색
-                            if (index == 2) return const Color(0xFFCD7F32); // 동색
-                            return Colors.grey[200]; // 그 외
-                          }(),
-                          shape: BoxShape.circle,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(size.width * 0.02),
+                      ),
+                      child: ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: size.width * 0.03,
                         ),
-                        child: Center(
-                          child: Text(
-                            '${index + 1}',
-                            style: TextStyle(
-                              color: index < 3 ? Colors.white : Colors.grey[600],
-                              fontWeight: FontWeight.bold,
-                              fontSize: itemHeight * 0.25,
+                        leading: Container(
+                          width: itemHeight * 0.5,
+                          height: itemHeight * 0.5,
+                          decoration: BoxDecoration(
+                            color: () {
+                              if (index == 0) return const Color(0xFFFFD700);
+                              if (index == 1) return const Color(0xFFC0C0C0);
+                              if (index == 2) return const Color(0xFFCD7F32);
+                              return Colors.grey[200];
+                            }(),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Text(
+                              '${index + 1}',
+                              style: TextStyle(
+                                color: index < 3 ? Colors.white : Colors.grey[600],
+                                fontWeight: FontWeight.bold,
+                                fontSize: itemHeight * 0.25,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      title: Text(
-                        '홍길동',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: itemHeight * 0.22,
+                        title: Text(
+                          name,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: itemHeight * 0.22,
+                          ),
                         ),
-                      ),
-                      subtitle: Text(
-                        '1학년 2반 15번',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: itemHeight * 0.18,
+                        subtitle: Text(
+                          '${user['grade']}학년 ${user['class']}반 ${user['number']}번',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: itemHeight * 0.18,
+                          ),
                         ),
-                      ),
-                      trailing: Text(
-                        _formatDuration(mockTotalMinutes),
-                        style: TextStyle(
-                          color: customBlue,
-                          fontWeight: FontWeight.bold,
-                          fontSize: itemHeight * 0.2, // 시간 표시가 길어져서 폰트 크기 약간 감소
+                        trailing: Text(
+                          _formatDuration(studyTime),
+                          style: TextStyle(
+                            color: customBlue,
+                            fontWeight: FontWeight.bold,
+                            fontSize: itemHeight * 0.2,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                );
-              },
-            ),
+                  );
+                },
+              );
+            },
+          ),
         ),
       ),
     );
