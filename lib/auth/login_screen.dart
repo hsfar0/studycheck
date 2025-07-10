@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -41,7 +42,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           );
           // 로그인 성공 시 메인 페이지로 이동
-          Navigator.of(context).pushNamedAndRemoveUntil('/main', (route) => false);
+          Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
         }
       } catch (e) {
         if (mounted) {
@@ -106,12 +107,12 @@ class _LoginScreenState extends State<LoginScreen> {
                             horizontal: 12,
                           ),
                         ),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
+                        ],
                         validator: (value) {
                           if (value?.isEmpty ?? true) {
                             return '이메일을 입력해주세요';
-                          }
-                          if (value!.contains('@')) {
-                            return '이메일 주소만 입력해주세요 (도메인 제외)';
                           }
                           return null;
                         },
@@ -137,6 +138,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.lock),
                     ),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.deny(RegExp(r'\s')), // 공백 금지
+                    ],
                     validator: (value) {
                       if (value?.isEmpty ?? true) {
                         return '비밀번호를 입력해주세요';
@@ -147,6 +151,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       return null;
                     },
                   ),
+
                   const SizedBox(height: 24),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(

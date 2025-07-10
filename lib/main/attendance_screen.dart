@@ -22,24 +22,24 @@ Widget _buildGridItem(BuildContext context, int index, Color bgColor, Size size,
       }
 
       bool allowedTime = false;
+      // TODO: 앱 테스트 목적으로 출첵 시간 제한 기능은 잠시 off
+      // if (weekday >= 1 && weekday <= 4) {
+      //   // 월~목
+      //   allowedTime = isInRange(now, 15, 50, 18, 0) || isInRange(now, 19, 0, 23, 20);
+      // } else if (weekday == 5) {
+      //   // 금
+      //   allowedTime = isInRange(now, 14, 50, 18, 0) || isInRange(now, 19, 0, 23, 20);
+      // }
 
-      if (weekday >= 1 && weekday <= 4) {
-        // 월~목
-        allowedTime = isInRange(now, 15, 50, 18, 0) || isInRange(now, 19, 0, 23, 20);
-      } else if (weekday == 5) {
-        // 금
-        allowedTime = isInRange(now, 14, 50, 18, 0) || isInRange(now, 19, 0, 23, 20);
-      }
-
-      if (!allowedTime) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('현재는 자습실 운영 시간이 아닙니다.'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-        return;
-      }
+      // if (!allowedTime) {
+      //   ScaffoldMessenger.of(context).showSnackBar(
+      //     const SnackBar(
+      //       content: Text('현재는 자습실 운영 시간이 아닙니다.'),
+      //       duration: Duration(seconds: 2),
+      //     ),
+      //   );
+      //   return;
+      // }
 
       final uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid == null) return;

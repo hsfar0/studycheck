@@ -14,12 +14,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
-  
+
   // 텍스트 필드 표시용 컨트롤러
   final _displayGradeController = TextEditingController();
   final _displayClassController = TextEditingController();
   final _displayNumberController = TextEditingController();
-  
+
   // Firestore 저장용 변수
   String? _selectedGrade;
   String? _selectedClass;
@@ -46,11 +46,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         String numbers = email.substring(2);
         // 숫자만 추출
         numbers = numbers.replaceAll(RegExp(r'[^0-9]'), '');
-        
+
         if (numbers.isNotEmpty) {
           // year는 처음 2자리
           int currentIndex = 2;  // year(2자리) 이후부터 시작
-          
+
           // 학년 파싱 (1자리)
           if (currentIndex < numbers.length) {
             String grade = numbers[currentIndex];
@@ -64,7 +64,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           } else {
             _displayGradeController.text = '';
           }
-          
+
           // 반 파싱 (1자리)
           if (currentIndex < numbers.length) {
             String classNum = numbers[currentIndex];
@@ -79,7 +79,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           } else {
             _displayClassController.text = '';
           }
-          
+
           // 번호 파싱 (최대 2자리)
           if (currentIndex < numbers.length) {
             String number = numbers.substring(currentIndex);
@@ -205,7 +205,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         number = number.substring(0, 2);
       }
       int numberInt = int.tryParse(number) ?? 0;
-      
+
       // 번호 유효성 검사 (1-30)
       if (numberInt < 1 || numberInt > 30) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -292,10 +292,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
         final userData = {
           'email': email,
           'name': _nameController.text,
-          'year': _year,
-          'grade': _selectedGrade,
-          'class': _selectedClass,
-          'number': _selectedNumber,
+          'year': int.parse(_year!),
+          'grade': int.parse(_selectedGrade!),
+          'class': int.parse(_selectedClass!),
+          'number': int.parse(_selectedNumber!),
           'createdAt': FieldValue.serverTimestamp(),
           'isStudying': false,
           'studyDay': 0,
@@ -323,7 +323,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         }
       } on FirebaseAuthException catch (e) {
         String message = '회원가입 중 오류가 발생했습니다.';
-        
+
         if (e.code == 'weak-password') {
           message = '비밀번호가 너무 약합니다. (최소 6자 이상)';
         } else if (e.code == 'email-already-in-use') {
@@ -436,12 +436,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Stack(
                       alignment: Alignment.centerRight,
                       children: [
-                        TextField(
+                        TextFormField(
                           controller: _emailController,
                           decoration: const InputDecoration(
                             labelText: '이메일',
                             prefixIcon: Icon(Icons.email),
                           ),
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]'))
+                          ],
                           keyboardType: TextInputType.text,
                           autocorrect: false,
                           enableSuggestions: false,
@@ -464,19 +467,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       obscureText: true,
                       decoration: const InputDecoration(
                         labelText: '비밀번호',
+                        hintText: '6자 이상',
+                        hintStyle: TextStyle(
+                          fontSize: 15,
+                          color: Color(0xFF4F4F4F)
+                        ),
                         prefixIcon: Icon(Icons.lock),
                       ),
                     ),
                     const SizedBox(height: 16),
-                    TextField(
+                    TextFormField(
                       controller: _nameController,
                       decoration: const InputDecoration(
-                        labelText: '이름',
+                        labelText: '이름(실명)',
                         prefixIcon: Icon(Icons.badge),
                         hintText: '한글 2~4글자',
+                        hintStyle: TextStyle(
+                            fontSize: 15,
+                            color: Color(0xFF4F4F4F)
+                        ),
                       ),
                       keyboardType: TextInputType.name,
-                      // 입력 필터 제거
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[ㄱ-ㅎㅏ-ㅣ가-힣]')),
+                      ],
                     ),
                     const SizedBox(height: 16),
                     Row(
@@ -562,4 +576,4 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
     );
   }
-} 
+}

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../auth/change_password.dart';
 import '../auth/login_screen.dart';
 import '../auth/register_screen.dart';
 import '../main/profile_screen.dart';
@@ -14,6 +15,7 @@ class Routes {
   static const String profile = '/profile';
   static const String attendance = '/attendance';
   static const String ranking = '/ranking';
+  static const String changepw = '/changepw';
 
   static Map<String, WidgetBuilder> getRoutes() {
     return {
@@ -23,6 +25,7 @@ class Routes {
       profile: (context) => const ProfileScreen(),
       attendance: (context) => const AttendanceScreen(),
       ranking: (context) => const RankingScreen(),
+      changepw: (context) => const ChangePasswordScreen(),
     };
   }
 } 
