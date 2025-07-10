@@ -9,21 +9,6 @@ class AuthService {
   // 현재 유저 정보 가져오기
   User? get currentUser => _auth.currentUser;
 
-  // 현재 유저 정보 디버깅
-  void debugCurrentUser() {
-    final user = currentUser;
-    if (user != null) {
-      print('=== 현재 로그인된 사용자 정보 ===');
-      print('UID: ${user.uid}');
-      print('이메일: ${user.email}');
-      print('이메일 인증 여부: ${user.emailVerified}');
-      print('마지막 로그인 시간: ${user.metadata.lastSignInTime}');
-      print('계정 생성 시간: ${user.metadata.creationTime}');
-      print('============================');
-    } else {
-      print('로그인된 사용자가 없습니다.');
-    }
-  }
 
   // 이메일/비밀번호로 로그인
   Future<UserCredential?> signInWithEmailAndPassword(
@@ -33,7 +18,6 @@ class AuthService {
         email: email,
         password: password,
       );
-      debugCurrentUser(); // 로그인 성공 시 사용자 정보 출력
       return credential;
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
@@ -48,7 +32,6 @@ class AuthService {
         email: email,
         password: password,
       );
-      debugCurrentUser(); // 회원가입 성공 시 사용자 정보 출력
       return credential;
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
