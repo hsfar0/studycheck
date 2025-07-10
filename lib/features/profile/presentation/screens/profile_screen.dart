@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -10,7 +11,6 @@ class ProfileScreen extends StatelessWidget {
     try {
       await FirebaseAuth.instance.signOut();
       if (context.mounted) {
-        // 로그아웃 후 로그인 화면으로 이동
         Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
       }
     } catch (e) {
@@ -32,12 +32,12 @@ class ProfileScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: PreferredSize(
-        preferredSize: Size.fromHeight(size.height * 0.06), // 6% of screen height
+        preferredSize: Size.fromHeight(size.height * 0.06),
         child: AppBar(
           title: Text(
             '계정 관리',
             style: TextStyle(
-              fontSize: size.width * 0.045, // 4.5% of screen width
+              fontSize: size.width * 0.045,
             ),
           ),
           backgroundColor: customBlue,
@@ -58,7 +58,7 @@ class ProfileScreen extends StatelessWidget {
         ),
         child: SafeArea(
           child: ListView(
-            padding: EdgeInsets.all(size.width * 0.04), // 4% of screen width
+            padding: EdgeInsets.all(size.width * 0.04),
             children: [
               _buildMenuItem(
                 context,
@@ -81,20 +81,20 @@ class ProfileScreen extends StatelessWidget {
                 onTap: () {},
               ),
               const Divider(height: 1),
-              SizedBox(height: size.height * 0.03), // 3% of screen height
+              SizedBox(height: size.height * 0.03),
               Padding(
                 padding: EdgeInsets.symmetric(
-                  horizontal: size.width * 0.04, // 4% of screen width
+                  horizontal: size.width * 0.04,
                 ),
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red,
                     minimumSize: Size(
                       double.infinity,
-                      size.height * 0.06, // 6% of screen height
+                      size.height * 0.06,
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(size.width * 0.02), // 2% of screen width
+                      borderRadius: BorderRadius.circular(size.width * 0.02),
                     ),
                   ),
                   onPressed: () => _handleLogout(context),
@@ -102,7 +102,7 @@ class ProfileScreen extends StatelessWidget {
                     '로그아웃',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: size.width * 0.04, // 4% of screen width
+                      fontSize: size.width * 0.04,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -125,25 +125,25 @@ class ProfileScreen extends StatelessWidget {
     
     return ListTile(
       contentPadding: EdgeInsets.symmetric(
-        horizontal: size.width * 0.04, // 4% of screen width
-        vertical: size.height * 0.01, // 1% of screen height
+        horizontal: size.width * 0.04,
+        vertical: size.height * 0.01,
       ),
       leading: Icon(
         icon,
         color: customBlue,
-        size: size.width * 0.06, // 6% of screen width
+        size: size.width * 0.06,
       ),
       title: Text(
         title,
         style: TextStyle(
-          fontSize: size.width * 0.04, // 4% of screen width
+          fontSize: size.width * 0.04,
           fontWeight: FontWeight.w500,
         ),
       ),
       trailing: Icon(
         Icons.chevron_right,
         color: Colors.grey,
-        size: size.width * 0.06, // 6% of screen width
+        size: size.width * 0.06,
       ),
       onTap: onTap,
     );
