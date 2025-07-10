@@ -65,6 +65,17 @@ Widget _buildGridItem(BuildContext context, int index, Color bgColor, Size size,
         return;
       }
 
+      if (!isStudying && seatUser != null && seatUser != uid) {
+        // 아직 출석 안했는데 다른 사람이 앉은 자리 누름 → SnackBar 출력 후 return
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('다른 사용자가 이미 출석 중인 자리입니다.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
       // 4. 기존 AlertDialog 로직
 
       final isOccupied = seatUser != null;
@@ -203,10 +214,10 @@ class AttendanceScreen extends StatelessWidget {
           child: Padding(
             padding: EdgeInsets.all(gridPadding),
             child: GridView.count(
-              crossAxisCount: 2,
+              crossAxisCount: 3,
               mainAxisSpacing: size.width * 0.04, // 4% of screen width
               crossAxisSpacing: size.width * 0.04, // 4% of screen width
-              children: List.generate(4, (index) {
+              children: List.generate(9, (index) {
                 final seatDocStream = FirebaseFirestore.instance
                     .collection('seats')
                     .doc('${index + 1}')
@@ -224,7 +235,14 @@ class AttendanceScreen extends StatelessWidget {
                     // user 필드가 null이 아니면 초록색, null이면 흰색
                     final isOccupied = data != null && data['user'] != null;
 
-                    final color = isOccupied ? Colors.green[300]! : Colors.white;
+                    final uid = FirebaseAuth.instance.currentUser?.uid;
+                    final seatUserId = data?['user'] as String?;
+
+                    final color = switch (seatUserId) {
+                      null => Colors.white, // 빈 자리
+                      final id when id == uid => Color(0xff2db400)!, // 내가 앉은 자리
+                      _ => Colors.yellow! // 다른 사람이 앉은 자리
+                    };
 
                     return _buildGridItem(context, index, color, size, customBlue);
                   },
