@@ -120,16 +120,48 @@ Widget _buildGridItem(BuildContext context, int index, Color bgColor, Size size,
                   fontSize: size.width * 0.035,
                 ),
               ),
-              onPressed: () async {
-                if (isOccupied) {
-                  await seatDocRef.update({'user': null});
-                  await FirebaseFirestore.instance.collection('users').doc(uid).update({'isStudying': false});
-                } else {
-                  await seatDocRef.update({'user': uid});
-                  await FirebaseFirestore.instance.collection('users').doc(uid).update({'isStudying': true});
+                onPressed: () async {
+                  final userRef = FirebaseFirestore.instance.collection('users').doc(uid);
+
+                  if (isOccupied) {
+                    // 🔸 출석 해제
+                    final userSnapshot = await userRef.get();
+                    final userData = userSnapshot.data();
+
+                    if (userData != null && userData['checkInTime'] != null) {
+                      final checkInTimestamp = userData['checkInTime'] as Timestamp;
+                      final checkInTime = checkInTimestamp.toDate();
+                      final now = DateTime.now();
+
+                      final duration = now.difference(checkInTime);
+                      final minutes = (duration.inSeconds / 60).round(); // 반올림
+
+                      final currentStudyTime = userData['studyTime'] ?? 0;
+                      final updatedStudyTime = currentStudyTime + minutes;
+
+                      await userRef.update({
+                        'isStudying': false,
+                        'checkInTime': FieldValue.delete(),
+                        'studyTime': updatedStudyTime,
+                      });
+                    } else {
+                      await userRef.update({'isStudying': false});
+                    }
+
+                    await seatDocRef.update({'user': null});
+                  } else {
+                    // 🔹 출석 시작
+                    await userRef.update({
+                      'isStudying': true,
+                      'checkInTime': DateTime.now(),
+                    });
+
+                    await seatDocRef.update({'user': uid});
+                  }
+
+                  Navigator.pop(context);
                 }
-                Navigator.pop(context);
-              },
+
             ),
           ],
         ),
