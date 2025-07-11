@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/services.dart'; // Added for FilteringTextInputFormatter
+import 'package:flutter/services.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -15,7 +15,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
 
-  // 텍스트 필드 표시용 컨트롤러
+  // 학년, 반, 번호 자동 입력 컨트롤러
   final _displayGradeController = TextEditingController();
   final _displayClassController = TextEditingController();
   final _displayNumberController = TextEditingController();
@@ -26,8 +26,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String? _selectedNumber;
   String? _year;
 
+  // 보라빛 파란색 색상
   static const Color customBlue = Color(0xFF7B8CDE);
-  static const Color customLightBlue = Color(0xFFE8EAFF); // 밝은 보라빛 하늘색
+
+  // 이메일 도메인
   static const String emailDomain = '@gyeongsin.hs.kr';
 
   bool _isLoading = false;
@@ -38,23 +40,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _emailController.addListener(_updateDisplayFields);
   }
 
+  // 학년, 반, 번호 자동 입력 (파싱 로직)
   void _updateDisplayFields() {
     String email = _emailController.text;
     if (email.startsWith('gs')) {
       try {
-        // gs 이후의 모든 문자열 가져오기
+        // gs 이후의 모든 문자열 추출
         String numbers = email.substring(2);
-        // 숫자만 추출
+        // 숫자 추출
         numbers = numbers.replaceAll(RegExp(r'[^0-9]'), '');
 
         if (numbers.isNotEmpty) {
-          // year는 처음 2자리
-          int currentIndex = 2;  // year(2자리) 이후부터 시작
+          // 년도 파싱 2자리
+          int currentIndex = 2;
 
-          // 학년 파싱 (1자리)
+          // 학년 파싱 1자리
           if (currentIndex < numbers.length) {
             String grade = numbers[currentIndex];
-            // 학년 유효성 검사 (1,2,3)
+
+            // 학년은 1, 2, 3 만 들어갈 수 있음
             if (['1', '2', '3'].contains(grade)) {
               _displayGradeController.text = '$grade학년';
             } else {
@@ -65,11 +69,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
             _displayGradeController.text = '';
           }
 
-          // 반 파싱 (1자리)
+          // 반 파싱 1자리
           if (currentIndex < numbers.length) {
             String classNum = numbers[currentIndex];
-            // 반 유효성 검사 (1-9)
             int classNumInt = int.tryParse(classNum) ?? 0;
+
+            // 반은 1 ~ 9 만 들어갈 수 있음
             if (classNumInt >= 1 && classNumInt <= 9) {
               _displayClassController.text = '$classNumInt반';
             } else {
@@ -80,15 +85,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
             _displayClassController.text = '';
           }
 
-          // 번호 파싱 (최대 2자리)
+          // 번호 파싱 2자리
           if (currentIndex < numbers.length) {
             String number = numbers.substring(currentIndex);
+
+            // 번호 2자리 제한 (넘어가면 인식 x)
             if (number.length > 2) {
               number = number.substring(0, 2);
             }
-            // 번호 유효성 검사 및 형식 변환 (1-30)
             int numberInt = int.tryParse(number) ?? 0;
-            // 번호가 두 자리이고 1-30 범위 내일 때만 표시
+
+            // 번호는 무조건 2자리, 1 ~ 30 만 들어갈 수 있음
             if (number.length == 2 && numberInt >= 1 && numberInt <= 30) {
               _displayNumberController.text = '$numberInt번';
             } else {
@@ -114,9 +121,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  // 이메일 형식 검증 및 파싱 함수
+  // 이메일 형식 검증
   bool _parseStudentInfo(String email) {
-    // gs로 시작하는지 확인
+
+    // 이메일은 무조건 gs로 시작해야 됨
     if (!email.startsWith('gs')) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -127,12 +135,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return false;
     }
 
-    // gs 이후의 모든 문자열 가져오기
+    // gs 이후의 모든 문자열 추출
     String numbers = email.substring(2);
-    // 숫자만 추출
+
+    // 숫자 추출
     numbers = numbers.replaceAll(RegExp(r'[^0-9]'), '');
 
-    // 숫자가 있는지 확인
+    // gs 뒤에는 무조건 숫자 들어가야 됨
     if (numbers.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -143,24 +152,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return false;
     }
 
-    // 최소 3자리 숫자가 필요 (year 2자리 + 학년 1자리)
-    if (numbers.length < 3) {
+    // gs 뒤에는 최소 5자리 숫자가 들어가야 됨
+    if (numbers.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('최소 3자리 이상의 숫자가 필요합니다. (예: gs251)'),
+          content: Text('존재하는 이메일을 입력해주세요 (예: gs251101)'),
           backgroundColor: Colors.red,
         ),
       );
       return false;
     }
 
-    // 순서대로 정보 파싱
-    // year는 처음 2자리
+    // firestore 저장용 정보 파싱
+    // 년도(_year) 2자리
     _year = numbers.substring(0, 2);
     int currentIndex = 2;
 
-    // 학년 파싱 및 검증 (1자리)
+    // 학년(_selectedGrade) 1자리 (1-3)
     String grade = numbers[currentIndex];
+
     if (!['1', '2', '3'].contains(grade)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -173,10 +183,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _selectedGrade = grade;
     currentIndex++;
 
-    // 반 파싱 및 검증 (1자리)
+    // 반(_selectedClass) 1자리 저장 (1-9)
     if (currentIndex < numbers.length) {
       String classNum = numbers[currentIndex];
       int classNumInt = int.tryParse(classNum) ?? 0;
+
       if (classNumInt < 1 || classNumInt > 9) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -198,7 +209,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return false;
     }
 
-    // 번호 파싱 및 검증 (최대 2자리)
+    // 번호(_selectedNumber) 2자리 (1-30)
     if (currentIndex < numbers.length) {
       String number = numbers.substring(currentIndex);
       if (number.length > 2) {
@@ -206,7 +217,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
       int numberInt = int.tryParse(number) ?? 0;
 
-      // 번호 유효성 검사 (1-30)
       if (numberInt < 1 || numberInt > 30) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -230,9 +240,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return true;
   }
 
+  // 회원가입 기능
   Future<void> _handleRegister() async {
     try {
-      // 입력값 검증
+      // 입력값 null 체크
       if (_emailController.text.isEmpty ||
           _passwordController.text.isEmpty ||
           _nameController.text.isEmpty) {
@@ -245,7 +256,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         return;
       }
 
-      // 이름 유효성 검사
+      // 이름 길이 체크 (2-4글자)
       String name = _nameController.text;
       if (name.length < 2 || name.length > 4) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -257,8 +268,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         return;
       }
 
-
-      // 한글 유효성 검사
+      // 이름 한글인지 체크
       if (!RegExp(r'^[가-힣]{2,4}$').hasMatch(name)) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -269,7 +279,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         return;
       }
 
-      // 이메일 형식 검증 및 파싱
+      // 이메일 형식 체크, 파싱
       if (!_parseStudentInfo(_emailController.text)) {
         return;
       }
@@ -281,16 +291,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
       try {
         final email = _emailController.text + emailDomain;
 
-        // Firebase Auth로 사용자 생성
+        // 회원가입
         final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: email,
           password: _passwordController.text,
         );
 
-        // 이메일 인증 메일 보내기
+        // 이메일 인증 메일 전송
         await userCredential.user!.sendEmailVerification();
 
-// 안내 메시지
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -299,12 +308,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
           );
 
-          // 로그인 화면으로 이동 또는 인증 안내 화면으로 이동
+          // 로그인 화면으로 이동
           Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
         }
 
 
-        // Firestore에 저장할 사용자 데이터
+        // Firestore에 저장하는 데이터
         final userData = {
           'email': email,
           'name': _nameController.text,
@@ -319,26 +328,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
           'studyTime': 0
         };
 
-        // Firestore에 사용자 추가 정보 저장
+        // Firestore 'users' 컬렉션에서 uid 문서에 유저 데이터 저장
         await FirebaseFirestore.instance
             .collection('users')
             .doc(userCredential.user!.uid)
             .set(userData);
 
-        if (mounted) {
-          // 회원가입 성공 메시지 표시
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('인증 메일이 안 왔다면 스팸함을 열어보세요.'),
-              backgroundColor: Colors.green,
-            ),
-          );
-
-          // 로그인 화면으로 이동
-          Navigator.pop;
-        }
       } on FirebaseAuthException catch (e) {
-        String message = '회원가입 중 오류가 발생했습니다.';
+        String message = '회원가입 중 오류가 발생했습니다. 관리자에게 문의해주세요.';
 
         if (e.code == 'weak-password') {
           message = '비밀번호가 너무 약합니다. (최소 6자 이상)';
@@ -347,7 +344,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         } else if (e.code == 'invalid-email') {
           message = '유효하지 않은 이메일 형식입니다.';
         } else if (e.code == 'operation-not-allowed') {
-          message = '이메일/비밀번호 로그인이 비활성화되어 있습니다.';
+          message = '이메일/비밀번호 로그인이 비활성화되어 있습니다. 관리자에게 문의해주세요.';
         }
 
         if (mounted) {
@@ -421,7 +418,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  customBlue.withOpacity(0.1),
+                  Colors.white.withValues(alpha: 0.8),
+                  customBlue.withValues(alpha: 0.2),
                   Colors.white,
                 ],
               ),
@@ -583,7 +581,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
           if (_isLoading)
             Container(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               child: const Center(
                 child: CircularProgressIndicator(),
               ),
