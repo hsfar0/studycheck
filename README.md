@@ -39,6 +39,8 @@
 
 ## 📸 스크린샷
 
+- 랭킹 페이지의 학생 이름들은 모두 가명입니다.
+
 <p align="center">
   <img src="./app_pic/1.png" alt="화면1" width="250"/>
   <img src="./app_pic/2.png" alt="화면2" width="250"/>
