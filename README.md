@@ -42,14 +42,11 @@
 <p align="center">
   <img src="./app_pic/1.png" alt="화면1" width="250"/>
   <img src="./app_pic/2.png" alt="화면2" width="250"/>
-</p>
-
-<p align="center">
   <img src="./app_pic/3.png" alt="화면3" width="250"/>
-  <img src="./app_pic/4.png" alt="화면4" width="250"/>
 </p>
 
 <p align="center">
+  <img src="./app_pic/4.png" alt="화면4" width="250"/>
   <img src="./app_pic/5.png" alt="화면5" width="250"/>
   <img src="./app_pic/6.png" alt="화면6" width="250"/>
 </p>
